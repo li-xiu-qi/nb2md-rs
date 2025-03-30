@@ -1,4 +1,4 @@
-# Jupyter2MD
+# nb2md-rs
 
 将 Jupyter 笔记本(.ipynb)批量转换为 Markdown(.md)文件的纯 Rust 实现工具。
 
