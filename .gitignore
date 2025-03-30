@@ -1,1 +1,44 @@
-/target
+# Rust 项目生成的文件
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo.lock 通常不应该被忽略，除非创建的是库项目
+# Cargo.lock
+
+# IDE 和编辑器文件夹
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.atom/
+.eclipse/
+
+# 操作系统生成的文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 备份文件
+*.bak
+*.backup
+*~
+*.swp
+*.tmp
+
+# 日志文件
+*.log
+logs/
+
+# 本地环境配置
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 其他常见忽略项
+/dist/
+/build/
+/cache/
+/coverage/

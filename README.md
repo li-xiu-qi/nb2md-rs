@@ -1,6 +1,6 @@
-# Jupyter2MD (Rust 版本)
+# Jupyter2MD
 
-将 Jupyter 笔记本(.ipynb)批量转换为 Markdown(.md)文件的 Rust 实现工具。
+将 Jupyter 笔记本(.ipynb)批量转换为 Markdown(.md)文件的纯 Rust 实现工具。
 
 ## 功能特点
 
@@ -8,20 +8,14 @@
 - 保持原始目录结构
 - 支持批量转换
 - 提供简单的命令行接口
+- 纯Rust实现，无Python依赖
 
 ## 环境要求
 
 - Rust 1.56+
 - Cargo
-- Jupyter nbconvert
 
 ## 安装
-
-确保您已安装 Jupyter nbconvert:
-
-```bash
-pip install nbconvert
-```
 
 编译 Rust 程序:
 
@@ -38,6 +32,7 @@ cargo run -- -i <输入目录> -o <输出目录>
 ```
 
 或者编译后运行:
+
 ```bash
 cargo build --release
 ./target/release/nb2md-rs -i <输入目录> -o <输出目录>

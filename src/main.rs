@@ -1,8 +1,9 @@
 use anyhow::{Context, Result};
 use clap::Parser;
+use serde_json::Value;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::io::Write;
+use std::path::Path;
 use walkdir::WalkDir;
 
 /// 将Jupyter笔记本转换为Markdown文件的工具
@@ -65,23 +66,132 @@ fn convert_jupyter_to_markdown(input_dir: &str, output_dir: &str) -> Result<()> 
         let output_subdir = Path::new(output_dir).join(rel_path.parent().unwrap_or_else(|| Path::new("")));
         fs::create_dir_all(&output_subdir).context("创建输出子目录失败")?;
         
-        println!("正在转换 {}", jupyter_file.display());
+        // 确定输出文件名：将.ipynb替换为.md
+        let file_stem = jupyter_file.file_stem().unwrap().to_str().unwrap();
+        let output_file_path = output_subdir.join(format!("{}.md", file_stem));
         
-        // 构建命令
-        let status = Command::new("jupyter")
-            .arg("nbconvert")
-            .arg("--to")
-            .arg("markdown")
-            .arg(jupyter_file.to_str().unwrap())
-            .arg("--output-dir")
-            .arg(output_subdir.to_str().unwrap())
-            .status()
-            .context("执行jupyter nbconvert命令失败")?;
-            
-        if !status.success() {
-            println!("转换 {} 时出错", jupyter_file.display());
+        println!("正在转换 {} 到 {}", jupyter_file.display(), output_file_path.display());
+        
+        // 读取ipynb文件
+        let notebook_content = fs::read_to_string(&jupyter_file)
+            .context(format!("读取文件失败: {}", jupyter_file.display()))?;
+        
+        // 解析JSON
+        let notebook: Value = serde_json::from_str(&notebook_content)
+            .context("解析Jupyter笔记本JSON失败")?;
+        
+        // 将笔记本转换为Markdown
+        let markdown = convert_notebook_to_markdown(&notebook)
+            .context("转换笔记本到Markdown失败")?;
+        
+        // 写入Markdown文件
+        let mut file = fs::File::create(&output_file_path)
+            .context(format!("创建Markdown文件失败: {}", output_file_path.display()))?;
+        file.write_all(markdown.as_bytes())
+            .context("写入Markdown内容失败")?;
+    }
+    
+    println!("转换完成！");
+    
+    Ok(())
+}
+
+/// 将Jupyter笔记本JSON转换为Markdown字符串
+fn convert_notebook_to_markdown(notebook: &Value) -> Result<String> {
+    let mut markdown = String::new();
+    
+    // 尝试获取标题/元数据
+    if let Some(metadata) = notebook["metadata"].as_object() {
+        if let Some(title) = metadata.get("title") {
+            if let Some(title_str) = title.as_str() {
+                markdown.push_str(&format!("# {}\n\n", title_str));
+            }
         }
     }
     
-    Ok(())
+    // 处理单元格
+    if let Some(cells) = notebook["cells"].as_array() {
+        for cell in cells {
+            let cell_type = cell["cell_type"].as_str().unwrap_or("code");
+            
+            match cell_type {
+                "markdown" => {
+                    // 直接添加Markdown内容
+                    if let Some(source) = cell["source"].as_array() {
+                        for line in source {
+                            if let Some(text) = line.as_str() {
+                                markdown.push_str(text);
+                            }
+                        }
+                        markdown.push_str("\n\n");
+                    } else if let Some(text) = cell["source"].as_str() {
+                        markdown.push_str(text);
+                        markdown.push_str("\n\n");
+                    }
+                },
+                "code" => {
+                    // 添加代码块
+                    markdown.push_str("```python\n");
+                    if let Some(source) = cell["source"].as_array() {
+                        for line in source {
+                            if let Some(text) = line.as_str() {
+                                markdown.push_str(text);
+                            }
+                        }
+                    } else if let Some(text) = cell["source"].as_str() {
+                        markdown.push_str(text);
+                    }
+                    markdown.push_str("\n```\n\n");
+                    
+                    // 处理代码输出
+                    if let Some(outputs) = cell["outputs"].as_array() {
+                        for output in outputs {
+                            if let Some(output_type) = output["output_type"].as_str() {
+                                match output_type {
+                                    "stream" => {
+                                        markdown.push_str("输出:\n\n```\n");
+                                        if let Some(text_array) = output["text"].as_array() {
+                                            for line in text_array {
+                                                if let Some(text) = line.as_str() {
+                                                    markdown.push_str(text);
+                                                }
+                                            }
+                                        } else if let Some(text) = output["text"].as_str() {
+                                            markdown.push_str(text);
+                                        }
+                                        markdown.push_str("\n```\n\n");
+                                    },
+                                    "execute_result" | "display_data" => {
+                                        // 处理输出数据
+                                        if let Some(data) = output["data"].as_object() {
+                                            // 处理文本/html输出
+                                            if let Some(text_plain) = data.get("text/plain") {
+                                                markdown.push_str("结果:\n\n```\n");
+                                                if let Some(text_array) = text_plain.as_array() {
+                                                    for line in text_array {
+                                                        if let Some(text) = line.as_str() {
+                                                            markdown.push_str(text);
+                                                        }
+                                                    }
+                                                } else if let Some(text) = text_plain.as_str() {
+                                                    markdown.push_str(text);
+                                                }
+                                                markdown.push_str("\n```\n\n");
+                                            }
+                                            
+                                            // TODO: 如果需要，可以添加对图像等其他输出类型的处理
+                                        }
+                                    },
+                                    _ => {}
+                                }
+                            }
+                        }
+                    }
+                },
+                _ => {}
+            }
+        }
+    }
+    
+    Ok(markdown)
 }
