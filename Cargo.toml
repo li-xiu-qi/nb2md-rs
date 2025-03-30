@@ -1,0 +1,10 @@
+[package]
+name = "nb2md-rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["筱可"]
+
+[dependencies]
+clap = { version = "4.4", features = ["derive"] }
+walkdir = "2.4"
+anyhow = "1.0"
