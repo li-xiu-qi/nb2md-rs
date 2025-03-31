@@ -2,7 +2,13 @@
 
 ## 项目简介
 
-nb2md-rs是一个简单而高效的Rust工具，用于将Jupyter笔记本(.ipynb文件)批量转换为Markdown格式(.md文件)。该工具采用纯Rust实现，无需依赖Python环境，能够保留Jupyter笔记本中的代码块、输出结果以及Markdown文本等内容。
+nb2md-rs是一个简单而高效的Rust工具，用于将Jupyter笔记本(.ipynb文件)批量转换为Markdown格式(.md文件)。该工具采用纯Rust实现，能够保留Jupyter笔记本中的代码块、输出结果以及Markdown文本等内容。
+
+## 相关项目
+
+如果您更喜欢Python实现，可以查看我们的Python版本：
+
+- [nb2md](https://github.com/li-xiu-qi/nb2md) - 原始的Python实现版本
 
 ## 功能特点
 
@@ -10,7 +16,7 @@ nb2md-rs是一个简单而高效的Rust工具，用于将Jupyter笔记本(.ipynb
 - 保留原始目录结构
 - 直接解析.ipynb文件的JSON内容
 - 支持代码单元格和Markdown单元格的转换
-- 纯Rust实现，无Python依赖
+- 纯Rust实现
 - 高效的文件处理性能
 
 ## 环境要求
