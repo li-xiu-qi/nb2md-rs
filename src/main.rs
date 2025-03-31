@@ -149,7 +149,7 @@ fn convert_notebook_to_markdown(notebook: &Value) -> Result<String> {
                             if let Some(output_type) = output["output_type"].as_str() {
                                 match output_type {
                                     "stream" => {
-                                        markdown.push_str("输出:\n\n```\n");
+                                        markdown.push_str("output:\n\n```\n");
                                         if let Some(text_array) = output["text"].as_array() {
                                             for line in text_array {
                                                 if let Some(text) = line.as_str() {
@@ -166,7 +166,7 @@ fn convert_notebook_to_markdown(notebook: &Value) -> Result<String> {
                                         if let Some(data) = output["data"].as_object() {
                                             // 处理文本/html输出
                                             if let Some(text_plain) = data.get("text/plain") {
-                                                markdown.push_str("结果:\n\n```\n");
+                                                markdown.push_str("result:\n\n```\n");
                                                 if let Some(text_array) = text_plain.as_array() {
                                                     for line in text_array {
                                                         if let Some(text) = line.as_str() {
